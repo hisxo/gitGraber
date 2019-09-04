@@ -1,0 +1,62 @@
+extension:avastlic
+extension:dbeaver-data-sources.xml
+extension:json api.forecast.io
+extension:json googleusercontent client_secret
+extension:json mongolab.com
+extension:pem private
+extension:ppk private
+extension:sql mysql dump
+extension:sql mysql dump password
+extension:yaml mongolab.com
+filename:.bash_history
+filename:.bash_profile aws
+filename:.bashrc mailchimp
+filename:.bashrc password
+filename:.cshrc
+filename:.dockercfg auth
+filename:.esmtprc password
+filename:.git-credentials
+filename:.history
+filename:.htpasswd
+filename:.netrc password
+filename:.npmrc _auth
+filename:.pgpass
+filename:.s3cfg
+filename:.sh_history
+filename:.tugboat NOT _tugboat
+filename:_netrc password
+filename:CCCam.cfg
+filename:config irc_pass
+filename:config.json auths
+filename:config.php dbpasswd
+filename:configuration.php JConfig password
+filename:connections.xml
+filename:credentials aws_access_key_id
+filename:dhcpd.conf
+filename:docker-compose
+filename:env
+filename:express.conf path:.openshift
+filename:filezilla.xml Pass
+filename:hub oauth_token
+filename:id_rsa or filename:id_dsa
+filename:idea14.key
+filename:logins.json
+filename:passwd path:etc
+filename:prod.exs NOT prod.secret.exs
+filename:prod.secret.exs
+filename:proftpdpasswd
+filename:recentservers.xml Pass
+filename:robomongo.json
+filename:server.cfg rcon password
+filename:shadow path:etc
+filename:sshd_config
+filename:ventrilo_srv.ini
+filename:wp-config.php
+HEROKU_API_KEY language:json
+HEROKU_API_KEY language:shell
+HOMEBREW_GITHUB_API_TOKEN language:shell
+JEKYLL_GITHUB_TOKEN
+jsforce extension:js conn.login
+path:sites databases password
+PT_TOKEN language:bash
+SF_USERNAME salesforce
