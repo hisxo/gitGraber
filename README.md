@@ -9,7 +9,7 @@ gitGraber is a tool developed in Python3 to monitor GitHub to search and find se
 
 # How it work ?
 
-It's important to understand that gitGraber is not designed to check history of repositoriy, many tools can already doing this great. gitGraber was originally developed to monitor and to parse last indexed files on GitHub. If gitGraber find something interesting, you will receive a notification on your Slack channel. You can also use it to have results directly on the command line.
+It's important to understand that gitGraber is not designed to check history of repositories, many tools can already doing this great. gitGraber was originally developed to monitor and to parse last indexed files on GitHub. If gitGraber find something interesting, you will receive a notification on your Slack channel. You can also use it to have results directly on the command line.
 
 In our experience, we are convinced that leaks do not come only from the organizations themselves, but also from service providers and employees, who do not necessarily have a "profile" indicating that they work for a particular organization. .
 
