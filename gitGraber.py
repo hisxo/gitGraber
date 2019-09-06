@@ -10,9 +10,7 @@ import argcomplete
 import config
 import tokens
 import os
-import base64
 from termcolor import colored
-from threading import Thread
 
 def createEmptyBinaryFile(name):
     f = open(name, 'wb')
@@ -29,7 +27,7 @@ def checkToken(content, tokensMap):
     for token in tokensMap.keys():
         googleUrlFound = False
         googleSecretFound = False
-        regex_pattern = tokensMap[token]
+        regex_pattern = re.compile(tokensMap[token])
         # Apply the matching regex on the content of the file downloaded from GitHub
         result = re.search(regex_pattern, content)
         # If the regex matches, add the result of the match to the dict tokens and the token name found
