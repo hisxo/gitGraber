@@ -54,6 +54,7 @@ heroku_secret
 heroku_secret_token
 jwt_secret
 jwt_token
+jwt_secret_token
 keyPassword
 mailgun_key
 mailgun_secret

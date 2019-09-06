@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import requests
 import re
 import json
@@ -8,7 +10,9 @@ import argcomplete
 import config
 import tokens
 import os
+import base64
 from termcolor import colored
+from threading import Thread
 
 def createEmptyBinaryFile(name):
     f = open(name, 'wb')
@@ -37,7 +41,7 @@ def checkToken(content, tokensMap):
             else:
                 tokens[result] = token
             if (googleUrlFound and googleSecretFound):
-                tokens[result] = 'GOOGLE'                
+                tokens[result] = 'GOOGLE'
     return tokens
 
 def notifySlack(message):
