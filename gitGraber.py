@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import requests
 import re
 import json
@@ -25,7 +27,7 @@ def checkToken(content, tokensMap):
     for token in tokensMap.keys():
         googleUrlFound = False
         googleSecretFound = False
-        regex_pattern = tokensMap[token]
+        regex_pattern = re.compile(tokensMap[token])
         # Apply the matching regex on the content of the file downloaded from GitHub
         result = re.search(regex_pattern, content)
         # If the regex matches, add the result of the match to the dict tokens and the token name found
@@ -37,7 +39,7 @@ def checkToken(content, tokensMap):
             else:
                 tokens[result] = token
             if (googleUrlFound and googleSecretFound):
-                tokens[result] = 'GOOGLE'                
+                tokens[result] = 'GOOGLE'
     return tokens
 
 def notifySlack(message):
