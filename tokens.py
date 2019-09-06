@@ -10,7 +10,7 @@ def initTokensMap():
     tokensMap['GOOGLE_URL'] = '([0-9]{12}-[a-z0-9]{32}.apps.googleusercontent.com)'
     tokensMap['GOOGLE_OAUTH_ACCESS_TOKEN'] = '(ya29\\.[0-9A-Za-z\\-_]+)'
     tokensMap['HEROKU'] = '(?:HEROKU_API_KEY|HEROKU_API_TOKEN|HEROKU_API_SECRET|heroku_api_key|heroku_api_token|heroku_api_secret)[\W|\s]{1,}([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12})\W'
-    tokensMap['JSON_WEB_TOKEN'] = '(eyJ[a-zA-Z0-9]{10,}\.eyJ[a-zA-Z0-9]{10,}\.[a-zA-Z0-9_-]{10,})'
+#   tokensMap['JSON_WEB_TOKEN'] = '(eyJ[a-zA-Z0-9]{10,}\.eyJ[a-zA-Z0-9]{10,}\.[a-zA-Z0-9_-]{10,})'
     tokensMap['MAILCHIMP'] = '\W([a-f0-9]{32}(-us2|-us3|-us4|-us5|-us6|-us7|-us8))\W'
     tokensMap['MAILGUN'] = '(key-[0-9a-f]{32})'
     tokensMap['PAYPAL'] = '[\W]{1,2}([E][A-Z]{1}[a-zA-Z0-9_-]{78})[\W]{1,2}$'
