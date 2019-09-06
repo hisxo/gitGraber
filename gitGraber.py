@@ -10,9 +10,7 @@ import argcomplete
 import config
 import tokens
 import os
-import base64
 from termcolor import colored
-from threading import Thread
 
 def createEmptyBinaryFile(name):
     f = open(name, 'wb')
