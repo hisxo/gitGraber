@@ -27,9 +27,9 @@ def checkToken(content, tokensMap):
     for token in tokensMap.keys():
         googleUrlFound = False
         googleSecretFound = False
-        regex_pattern = re.compile(tokensMap[token])
+        regexPattern = re.compile(tokensMap[token])
         # Apply the matching regex on the content of the file downloaded from GitHub
-        result = re.search(regex_pattern, content)
+        result = re.search(regexPattern, content)
         # If the regex matches, add the result of the match to the dict tokens and the token name found
         if result:
             if token == 'GOOGLE_URL':
@@ -46,7 +46,7 @@ def notifySlack(message):
     if not config.SLACK_WEBHOOKURL:
         print('Please define Slack Webhook URL to enable notifications')
         exit()
-    requests.post(config.SLACK_WEBHOOKURL, json={'text': message})
+    requests.post(config.SLACK_WEBHOOKURL, json={'text': ':new:'+message})
 
 def writeToWordlist(content, wordlist):
     f = open(wordlist, 'a+')
@@ -55,16 +55,20 @@ def writeToWordlist(content, wordlist):
     if s.find(bytes(filename,'utf-8')) == -1:
         f.write(filename + '\n')
 
-def displayResults(result, tokenResult, rawGitUrl):
+def displayResults(result, tokenResult, rawGitUrl, urlInfos):
     possibleTokenString = '[!] POSSIBLE '+tokenResult[result]+' TOKEN FOUND (keyword used:'+githubQuery+')'
     print(colored(possibleTokenString,'green'))
-    urlString = '[+] URL : ' + rawGitUrl
+    commitString = '[+] Commit date : '+urlInfos[2]+' by '+urlInfos[3]
+    print(commitString)
+    urlString = '[+] RAW URL : ' + rawGitUrl
     print(urlString)
-    clean_token = re.sub(tokens.CLEAN_TOKEN_STEP1, '', result.group(0))
-    clean_token = re.sub(tokens.CLEAN_TOKEN_STEP2, '', clean_token)
-    tokenString = '[+] Token : ' + clean_token
-    print(tokenString)
-    return possibleTokenString+'\n'+urlString+'\n'+tokenString
+    cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP1, '', result.group(0))
+    cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP2, '', cleanToken)
+    tokenString = '[+] Token : ' + cleanToken
+    print(tokenString.strip())
+    repoString = '[+] Repository URL : '+urlInfos[1]
+    print(repoString)
+    return possibleTokenString+'\n'+commitString+'\n'+urlString+'\n'+tokenString+'\n'+repoString
 
 def parseResults(content):
     data = json.loads(content)
@@ -73,22 +77,42 @@ def parseResults(content):
     try:
         for item in data['items']:
             gitUrl = item['url']
+			
+            #Parse JSON to get info about repository
+            repoName = item['repository']['full_name']
+            commitHash = gitUrl.split('ref=')[1]
+            commitUrl = config.GITHUB_API_COMMIT_URL+repoName+'/commits/'+commitHash
+			
             # TODO Centralize header management for token auth here (rate-limit more agressive on Github otherwise)
             headers = {'Accept': 'application/vnd.github.v3.text-match+json',
-            'Authorization': 'token ' + config.GITHUB_TOKENS[0]
+            'Authorization': 'token ' + config.GITHUB_TOKENS[3]
             }
             response = requests.get(gitUrl,headers=headers)
-            data2 = json.loads(response.text)
-            rawGitUrl = data2['download_url']
+            rawUrl = json.loads(response.text)
+            rawGitUrl = rawUrl['download_url']
+            
+            #Request to extract data about repository and user
+            response = requests.get(commitUrl,headers=headers)
+            commitData = json.loads(response.text)
+            commitDate = commitData['commit']['author']['date']
+            commitAuthor = commitData['commit']['author']['email']
+            
             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
             if s.find(bytes(rawGitUrl,'utf-8')) == -1:
                f.write(rawGitUrl + '\n')
-               contentRaw[rawGitUrl] = requests.get(rawGitUrl, headers=headers)
+               contentRaw[rawGitUrl] = []
+               contentRaw[rawGitUrl].append(requests.get(rawGitUrl, headers=headers))
+               contentRaw[rawGitUrl].append(config.GITHUB_BASE_URL+'/'+repoName)
+               contentRaw[rawGitUrl].append(commitDate)
+               contentRaw[rawGitUrl].append(commitAuthor)
         return contentRaw
+    except KeyError as ke:
+        print(colored('[!] Github API rate-limit detected, please retry with other tokens','red'))
+        pass
     except Exception as e:
         # TODO Catch rate-limit exception EXCEPTION 'download_url' 'API rate limit exceeded for x.x.x.x (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)', 'documentation_url': 'https://developer.github.com/v3/#rate-limiting'
         # TODO Catch mmap exception if rawGitUrls is empty (have to be initialized before first use)
-        # print('Exception '+str(e))
+        #print('Exception '+str(e.msg))
         pass
                                     
 def requestGithub(keywordsFile, args):
@@ -110,9 +134,9 @@ def requestGithub(keywordsFile, args):
                         content = parseResults(response.text)
                         if content:
                             for rawGitUrl in content.keys():
-                                tokensResult = checkToken(content[rawGitUrl].text, tokenMap)
+                                tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap)
                                 for token in tokensResult.keys():
-                                    displayMessage = displayResults(token, tokensResult, rawGitUrl)
+                                    displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
                                     if args.slack:
                                         notifySlack(displayMessage)
                                     if args.wordlist:
