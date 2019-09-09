@@ -3,7 +3,7 @@
 <img src="https://img.shields.io/badge/made%20with-python-blue.svg" alt="made with python 3.x"> <img src="https://img.shields.io/github/issues/hisxo/gitgraber.svg">
 # About gitGraber
 
-gitGraber is a tool developed in Python3 to monitor GitHub to search and find sensitive data for different online services such as: Google, Amazon, Paypal, Github, Mailgun, Facebook, Twitter, Heroku, Stripe...
+**gitGraber is a tool developed in Python3 to monitor GitHub to search and find sensitive data in real time for different online services such as: Google, Amazon, Paypal, Github, Mailgun, Facebook, Twitter, Heroku, Stripe...**
 
 ![demo](https://i.ibb.co/h1rn2KK/example-script-execution.png)
 
