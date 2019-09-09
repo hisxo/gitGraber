@@ -64,12 +64,11 @@ Some wordlists have been created by us and some others are inspired from other r
 
 # TODO
 
-- Add more regex & patterns
-- Add a "combo check" module (for services like Twilio that require two tokens)
-- Add multi threads
-- Add bearer token detections
-- Change token cleaning output
-- Add user and org names display in notifications
+- [ ] Add more regex & patterns
+- [ ] Add a "combo check" module (for services like Twilio that require two tokens)
+- [ ] Add multi threads
+- [ ] Change token cleaning output
+- [X] Add user and org names display in notifications
 
 # Authors
 
