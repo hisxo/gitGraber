@@ -69,6 +69,7 @@ Some wordlists have been created by us and some others are inspired from other r
 - [ ] Add multi threads
 - [ ] Change token cleaning output
 - [X] Add user and org names display in notifications
+- [X] Add commit date
 
 # Authors
 
