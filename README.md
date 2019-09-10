@@ -9,13 +9,13 @@
 
 # How it work ?
 
-It's important to understand that gitGraber is not designed to check history of repositories, many tools can already doing this great. gitGraber was originally developed to monitor and to parse last indexed files on GitHub. If gitGraber find something interesting, you will receive a notification on your Slack channel. You can also use it to have results directly on the command line.
+It's important to understand that gitGraber is not designed to check history of repositories, many tools can already do that great. gitGraber was originally developed to monitor and parse last indexed files on GitHub. If gitGraber find something interesting, you will receive a notification on your Slack channel. You can also use it to have results directly on the command line.
 
-In our experience, we are convinced that leaks do not come only from the organizations themselves, but also from service providers and employees, who do not necessarily have a "profile" indicating that they work for a particular organization. .
+In our experience, we are convinced that leaks do not come only from the organizations themselves, but also from service providers and employees, who do not necessarily have a "profile" indicating that they work for a particular organization.
 
 Regex are supposed to be the more precise than possible. Sometimes, maybe you will have false-positive, feel free to contribute to improve recon and add new regex for pattern detection.
 
-We prefer to reduce false positive instead to send notification for every "standard" API key which could found by gitGraber but irrelevant for hunter.
+We prefer to reduce false positive instead to send notification for every "standard" API keys which could found by gitGraber but irrelevant for your monitoring.
 
 # How to use gitGraber ?
 
@@ -57,7 +57,7 @@ _We recommend creating a cron that will execute the script regulary_:
 
 ## Wordlists & Resources
 
-Some wordlists have been created by us and some others are inspired from other repo/researcher
+Some wordlists have been created by us and some others are inspired from other repos/researchers
 
 * Link : https://gist.github.com/nullenc0de/fa23444ed574e7e978507178b50e1057
 * Link : https://github.com/streaak/keyhacks
