@@ -53,7 +53,7 @@ To start and use gitGraber : ``python3 gitGraber.py -k wordlists/keywords.txt -q
 
 _We recommend creating a cron that will execute the script regulary_:
 
-``*/10 * * * * cd /BugBounty/gitGraber/ && /usr/bin/python3 gitGraber.py -k wordlists/keywords.txt -q "uber" -s >/dev/null 2>&1``
+``*/15 * * * * cd /BugBounty/gitGraber/ && /usr/bin/python3 gitGraber.py -k wordlists/keywords.txt -q "uber" -s >/dev/null 2>&1``
 
 ## Wordlists & Resources
 
@@ -62,19 +62,26 @@ Some wordlists have been created by us and some others are inspired from other r
 * Link : https://gist.github.com/nullenc0de/fa23444ed574e7e978507178b50e1057
 * Link : https://github.com/streaak/keyhacks
 
-# TODO
+## TODO
 
 - [ ] Add more regex & patterns
 - [ ] Add a "combo check" module (for services like Twilio that require two tokens)
 - [ ] Add multi threads
-- [ ] Change token cleaning output
+- [ ] Improve token cleaning output
 - [X] Add user and org names display in notifications
 - [X] Add commit date
+- [X] Manage rate limit
 
 # Authors
 
-* Reptou - [Twitter](https://twitter.com/R_Marot)
-* Hisxo - [Twitter](https://twitter.com/adrien_jeanneau)
+* Reptou - [Twitter : @R_Marot](https://twitter.com/R_Marot)
+* Hisxo - [Twitter : @adrien_jeanneau](https://twitter.com/adrien_jeanneau)
+
+# Contributors
+
+Thanks for your contribution and for you help to improve gitGraber:
+
+- [@Darkpills](https://github.com/hisxo/gitGraber/pulls?q=is%3Apr+author%3Adarkpills)
 
 # Disclaimer
 
