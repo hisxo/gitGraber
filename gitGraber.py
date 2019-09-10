@@ -10,6 +10,7 @@ import argcomplete
 import config
 import tokens
 import os
+from pprint import pprint
 from termcolor import colored
 
 def createEmptyBinaryFile(name):
@@ -114,13 +115,53 @@ def parseResults(content):
         # TODO Catch mmap exception if rawGitUrls is empty (have to be initialized before first use)
         #print('Exception '+str(e.msg))
         pass
-                                    
+
+# Transform the config github token list to a dict of key values
+def initGithubToken():
+    for i, token in enumerate(config.GITHUB_TOKENS):
+        config.GITHUB_TOKENS[i] = {"token": token, "remaining": 1, "reset": time.time()}
+
+# Manages a token stores with request remaining count and reset time
+# for each github token
+def getGithubToken():
+    minTimeToken = 0
+    #pprint(config.GITHUB_TOKENS)
+    for tokenState in config.GITHUB_TOKENS:
+        if tokenState['remaining'] > 0:
+            return tokenState['token']
+        if minTimeToken == 0 or minTimeToken['reset'] > tokenState['reset']:
+            minTimeToken = tokenState
+
+    sleepTime = minTimeToken['reset'] - int(time.time()) + 1
+    if sleepTime > 0:        
+        print('[i] Sleeping ' + str(sleepTime) + ' sec')
+        time.sleep(sleepTime)
+
+    return minTimeToken['token']
+
+# Updates github token stores with last response information
+def updateGithubToken(token, response):
+    for i, tokenState in enumerate(config.GITHUB_TOKENS):
+        if token == tokenState['token']:
+            if response.status_code != 200:
+                tokenState['remaining'] = 0
+            elif 'X-RateLimit-Remaining' in response.headers:
+                tokenState['remaining'] = int(response.headers['X-RateLimit-Remaining'])
+            if 'X-RateLimit-Reset' in response.headers:
+                tokenState['reset'] = int(response.headers['X-RateLimit-Reset'])
+            elif 'Retry-After' in response.headers:
+                tokenState['reset'] = int(time.time()) + 1 + int(response.headers['Retry-After'])
+            config.GITHUB_TOKENS[i] = tokenState
+
+                        
 def requestGithub(keywordsFile, args):
     keywordSearches = []
     tokenMap = tokens.initTokensMap()
     with open(keywordsFile, 'r') as myfile:
         for keyword in myfile:
-            for token in config.GITHUB_TOKENS:
+            resquestNotOK = True
+            while resquestNotOK:
+                token = getGithubToken()
                 print(colored('[+] Github query : '+config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS,'yellow'))
                 # TODO Centralize header management for token auth here (rate-limit more agressive on Github otherwise)
                 headers = {
@@ -130,18 +171,34 @@ def requestGithub(keywordsFile, args):
                 try:
                     response = requests.get(config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS, headers=headers)
                     print('[i] Status code : ' + str(response.status_code))
+                    updateGithubToken(token, response)
                     if response.status_code == 200:
+                        resquestNotOK = False
                         content = parseResults(response.text)
                         if content:
                             for rawGitUrl in content.keys():
-                                tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap)
+                                tokensResult = checkToken(content[rawGitUrl].text, tokenMap)
                                 for token in tokensResult.keys():
-                                    displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
+                                    displayMessage = displayResults(token, tokensResult, rawGitUrl)
                                     if args.slack:
                                         notifySlack(displayMessage)
                                     if args.wordlist:
                                         writeToWordlist(rawGitUrl, args.wordlist)
-                        break
+
+                    elif response.status_code == 403:
+                        #pprint(response.headers)
+                        responseJson = json.loads(response.text)
+                        if "API rate limit exceeded" in responseJson['message']:
+                            print('[i] API rate limit exceeded for token ' + token)
+                        elif "abuse detection mechanism" in responseJson['message']:
+                            print('[i] Abuse detection reached for token ' + token)
+                        else:
+                            print(colored('[!] Unexpected response','red'))
+                            print(colored(response.text,'red'))
+                    else:
+                        print(colored('[!] Unexpected HTTP response ' + str(response.status_code),'red'))
+                        print(colored(response.text,'red'))
+
                 except UnicodeEncodeError as e:
                     # TODO improve exception management
                     print(e.msg)
@@ -150,7 +207,7 @@ def requestGithub(keywordsFile, args):
 
 parser = argparse.ArgumentParser()
 argcomplete.autocomplete(parser)
-parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)')
+parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)', default="wordlists/keywords.txt")
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
@@ -160,7 +217,7 @@ if not args.keywordsFile:
     print('No keyword (-k or --keyword) file is specified')
     exit()
 
-if not args.query:
+if not args.query or args.query == "":
     print('No query (-q or --query) is specified, default query will be used')
     args.query = ' '
     githubQuery = args.query
@@ -169,6 +226,8 @@ keywordsFile = args.keywordsFile
 githubQuery = args.query
 tokenMap = tokens.initTokensMap()
 tokensResult = []
+initGithubToken()
+
 
 # If wordlist, check if file is binary initialized for mmap 
 if(args.wordlist):
