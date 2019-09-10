@@ -10,7 +10,9 @@ import argcomplete
 import config
 import tokens
 import os
+from pprint import pprint
 from termcolor import colored
+from urllib.parse import urlparse
 
 def createEmptyBinaryFile(name):
     f = open(name, 'wb')
@@ -77,22 +79,17 @@ def parseResults(content):
     try:
         for item in data['items']:
             gitUrl = item['url']
+            repoName = item['repository']['full_name']
 			
             #Parse JSON to get info about repository
-            repoName = item['repository']['full_name']
-            commitHash = gitUrl.split('ref=')[1]
-            commitUrl = config.GITHUB_API_COMMIT_URL+repoName+'/commits/'+commitHash
-			
-            # TODO Centralize header management for token auth here (rate-limit more agressive on Github otherwise)
-            headers = {'Accept': 'application/vnd.github.v3.text-match+json',
-            'Authorization': 'token ' + config.GITHUB_TOKENS[3]
-            }
-            response = requests.get(gitUrl,headers=headers)
+            response = doRequestGitHub(gitUrl)
             rawUrl = json.loads(response.text)
             rawGitUrl = rawUrl['download_url']
             
             #Request to extract data about repository and user
-            response = requests.get(commitUrl,headers=headers)
+            commitHash = gitUrl.split('ref=')[1]
+            commitUrl = config.GITHUB_API_COMMIT_URL+repoName+'/commits/'+commitHash
+            response = doRequestGitHub(commitUrl)
             commitData = json.loads(response.text)
             commitDate = commitData['commit']['author']['date']
             commitAuthor = commitData['commit']['author']['email']
@@ -101,56 +98,123 @@ def parseResults(content):
             if s.find(bytes(rawGitUrl,'utf-8')) == -1:
                f.write(rawGitUrl + '\n')
                contentRaw[rawGitUrl] = []
-               contentRaw[rawGitUrl].append(requests.get(rawGitUrl, headers=headers))
+               contentRaw[rawGitUrl].append(doRequestGitHub(rawGitUrl))
                contentRaw[rawGitUrl].append(config.GITHUB_BASE_URL+'/'+repoName)
                contentRaw[rawGitUrl].append(commitDate)
                contentRaw[rawGitUrl].append(commitAuthor)
         return contentRaw
-    except KeyError as ke:
-        print(colored('[!] Github API rate-limit detected, please retry with other tokens','red'))
-        pass
+
     except Exception as e:
-        # TODO Catch rate-limit exception EXCEPTION 'download_url' 'API rate limit exceeded for x.x.x.x (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)', 'documentation_url': 'https://developer.github.com/v3/#rate-limiting'
-        # TODO Catch mmap exception if rawGitUrls is empty (have to be initialized before first use)
-        #print('Exception '+str(e.msg))
+        print('Exception '+str(e))
         pass
-                                    
-def requestGithub(keywordsFile, args):
+
+# Transform the config github token list to a dict of key values
+def initGithubToken():
+    init = []
+    for token in config.GITHUB_TOKENS:
+        init.append({"token": token, "remaining": 1, "reset": time.time()})
+    return init
+
+# Manages a token stores with request remaining count and reset time
+# for each github token
+def getGithubToken(url):
+    minTimeToken = 0
+    path = urlparse(url).path
+    #pprint(config.GITHUB_TOKENS)
+    if not path in config.GITHUB_TOKENS_STATES:
+        config.GITHUB_TOKENS_STATES[path] = initGithubToken()
+
+    for tokenState in config.GITHUB_TOKENS_STATES[path]:
+        if tokenState['remaining'] > 0:
+            return tokenState['token']
+        if minTimeToken == 0 or minTimeToken['reset'] > tokenState['reset']:
+            minTimeToken = tokenState
+
+    sleepTime = minTimeToken['reset'] - int(time.time()) + 1
+    if sleepTime > 0:        
+        print('[i] Sleeping ' + str(sleepTime) + ' sec')
+        time.sleep(sleepTime)
+
+    return minTimeToken['token']
+
+# Updates github token stores with last response information
+def updateGithubToken(url, token, response):
+    path = urlparse(url).path
+    for i, tokenState in enumerate(config.GITHUB_TOKENS_STATES[path]):
+        if token == tokenState['token']:
+            if response.status_code != 200:
+                tokenState['remaining'] = 0
+            elif 'X-RateLimit-Remaining' in response.headers:
+                tokenState['remaining'] = int(response.headers['X-RateLimit-Remaining'])
+            if 'X-RateLimit-Reset' in response.headers:
+                tokenState['reset'] = int(response.headers['X-RateLimit-Reset'])
+            elif 'Retry-After' in response.headers:
+                tokenState['reset'] = int(time.time()) + 1 + int(response.headers['Retry-After'])
+            config.GITHUB_TOKENS_STATES[path][i] = tokenState
+
+def doRequestGitHub(url, verbose=False):
+    nbMaxTry = config.GITHUB_MAX_RETRY
+    while nbMaxTry > 0:
+        token = getGithubToken(url)
+        if verbose:
+            print(colored('[i] Github query : ' + url, 'yellow'))
+        headers = {
+            'Accept': 'application/vnd.github.v3.text-match+json',
+            'Authorization': 'token ' + token
+        }
+        try:
+            response = requests.get(url, headers=headers)
+            nbMaxTry = nbMaxTry - 1
+            if verbose:
+                print('[i] Status code : ' + str(response.status_code))
+            updateGithubToken(url, token, response)
+            if response.status_code == 200:
+                return response
+                
+            elif response.status_code == 403:
+                #pprint(response.headers)
+                responseJson = json.loads(response.text)
+                if "API rate limit exceeded" in responseJson['message']:
+                    if verbose:
+                        print('[i] API rate limit exceeded for token ' + token)
+                elif "abuse detection mechanism" in responseJson['message']:
+                    if verbose:
+                        print('[i] Abuse detection reached for token ' + token)
+                else:
+                    print(colored('[!] Unexpected response','red'))
+                    print(colored(response.text,'red'))
+            else:
+                print(colored('[!] Unexpected HTTP response ' + str(response.status_code),'red'))
+                print(colored(response.text,'red'))
+
+        except UnicodeEncodeError as e:
+            # TODO improve exception management
+            print(e.msg)
+            pass
+                        
+def searchGithub(keywordsFile, args):
     keywordSearches = []
     tokenMap = tokens.initTokensMap()
     with open(keywordsFile, 'r') as myfile:
         for keyword in myfile:
-            for token in config.GITHUB_TOKENS:
-                print(colored('[+] Github query : '+config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS,'yellow'))
-                # TODO Centralize header management for token auth here (rate-limit more agressive on Github otherwise)
-                headers = {
-                    'Accept': 'application/vnd.github.v3.text-match+json',
-                    'Authorization': 'token ' + token
-                }
-                try:
-                    response = requests.get(config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS, headers=headers)
-                    print('[i] Status code : ' + str(response.status_code))
-                    if response.status_code == 200:
-                        content = parseResults(response.text)
-                        if content:
-                            for rawGitUrl in content.keys():
-                                tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap)
-                                for token in tokensResult.keys():
-                                    displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
-                                    if args.slack:
-                                        notifySlack(displayMessage)
-                                    if args.wordlist:
-                                        writeToWordlist(rawGitUrl, args.wordlist)
-                        break
-                except UnicodeEncodeError as e:
-                    # TODO improve exception management
-                    print(e.msg)
-                    pass
+            url = config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS
+            response = doRequestGitHub(url, True)
+            content = parseResults(response.text)
+            if content:
+                for rawGitUrl in content.keys():
+                    tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap)
+                    for token in tokensResult.keys():
+                        displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
+                        if args.slack:
+                            notifySlack(displayMessage)
+                        if args.wordlist:
+                            writeToWordlist(rawGitUrl, args.wordlist)
+
     return keywordSearches
 
 parser = argparse.ArgumentParser()
 argcomplete.autocomplete(parser)
-parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)')
+parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)', default="wordlists/keywords.txt")
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
@@ -160,7 +224,7 @@ if not args.keywordsFile:
     print('No keyword (-k or --keyword) file is specified')
     exit()
 
-if not args.query:
+if not args.query or args.query == "":
     print('No query (-q or --query) is specified, default query will be used')
     args.query = ' '
     githubQuery = args.query
@@ -169,6 +233,8 @@ keywordsFile = args.keywordsFile
 githubQuery = args.query
 tokenMap = tokens.initTokensMap()
 tokensResult = []
+config.GITHUB_TOKENS_STATES = {}
+
 
 # If wordlist, check if file is binary initialized for mmap 
 if(args.wordlist):
@@ -178,4 +244,4 @@ if(args.wordlist):
 initFile(config.GITHUB_URL_FILE)
 
 # Send requests to Github API
-responses = requestGithub(keywordsFile, args)
+responses = searchGithub(keywordsFile, args)
