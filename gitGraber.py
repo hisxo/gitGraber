@@ -23,25 +23,31 @@ def initFile(name):
     if not name or os.path.getsize(name) == 0:
         createEmptyBinaryFile(name)
 
-def checkToken(content, tokensMap):
+def checkToken(content, tokensMap, tokensCombo):
     tokens = {}
     # For each type of tokens (ie 'AWS'...)
-    for token in tokensMap.keys():
-        googleUrlFound = False
-        googleSecretFound = False
-        regexPattern = re.compile(tokensMap[token])
+    for token in tokensMap:
+        regexPattern = re.compile(token.getRegex())
         # Apply the matching regex on the content of the file downloaded from GitHub
         result = re.search(regexPattern, content)
         # If the regex matches, add the result of the match to the dict tokens and the token name found
         if result:
-            if token == 'GOOGLE_URL':
-                googleUrlFound = True
-            elif token == 'GOOGLE_SECRET':
-                googleSecretFound = True
-            else:
-                tokens[result] = token
-            if (googleUrlFound and googleSecretFound):
-                tokens[result] = 'GOOGLE'
+                tokens[result] = token.getName()
+    
+    for combo in tokensCombo:
+        found = True
+        result = []
+        for t in combo.getTokens():
+            regexPattern = re.compile(t.getRegex())
+            match = re.search(regexPattern, content)
+            result.append(match)
+            if not match:
+                found = False
+                break
+        if found:
+            for r in result:
+                tokens[r] = combo.getName()
+
     return tokens
 
 def notifySlack(message):
@@ -194,7 +200,8 @@ def doRequestGitHub(url, verbose=False):
                         
 def searchGithub(keywordsFile, args):
     keywordSearches = []
-    tokenMap = tokens.initTokensMap()
+    tokenMap, tokenCombos = tokens.initTokensMap()
+
     with open(keywordsFile, 'r') as myfile:
         for keyword in myfile:
             url = config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS
@@ -202,7 +209,7 @@ def searchGithub(keywordsFile, args):
             content = parseResults(response.text)
             if content:
                 for rawGitUrl in content.keys():
-                    tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap)
+                    tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
                     for token in tokensResult.keys():
                         displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
                         if args.slack:
@@ -231,8 +238,6 @@ if not args.query or args.query == "":
 
 keywordsFile = args.keywordsFile
 githubQuery = args.query
-tokenMap = tokens.initTokensMap()
-tokensResult = []
 config.GITHUB_TOKENS_STATES = {}
 
 
