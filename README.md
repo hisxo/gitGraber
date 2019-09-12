@@ -100,6 +100,7 @@ Some wordlists & regex have been created by us and some others are inspired from
 
 ## TODO
 
+- [ ] Add a false positive detection
 - [ ] Add args to only output results (to hide status code and other things)
 - [ ] Send only one notification for double tokens (for services like Twilio)
 - [ ] Filter to send notification only if commit date is > to date defined in args
