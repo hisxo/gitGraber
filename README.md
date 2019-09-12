@@ -100,10 +100,14 @@ Some wordlists & regex have been created by us and some others are inspired from
 
 ## TODO
 
-- [ ] Add more regex & patterns
-- [X] Add a "combo check" module (for services like Twilio that require two tokens)
+- [ ] Add args to only output results (to hide status code and other things)
+- [ ] Send only one notification for double tokens (for services like Twilio)
+- [ ] Filter to send notification only if commit date is > to date defined in args
+- [ ] Improve "commit date" notification to display something like "[+] Commit date (5 days ago)"
+- [ ] Add args to output results in file
 - [ ] Add multi threads
 - [ ] Improve token cleaning output
+- [X] Add a "combo check" module (for services like Twilio that require two tokens)
 - [X] Add user and org names display in notifications
 - [X] Add commit date
 - [X] Manage rate limit
