@@ -10,6 +10,8 @@ import argcomplete
 import config
 import tokens
 import os
+import time
+from datetime import datetime
 from pprint import pprint
 from termcolor import colored
 from urllib.parse import urlparse
@@ -23,8 +25,12 @@ def initFile(name):
     if not name or os.path.getsize(name) == 0:
         createEmptyBinaryFile(name)
 
+def clean(result):
+    cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP1, '', result.group(0))
+    return re.sub(tokens.CLEAN_TOKEN_STEP2, '', cleanToken)
+
 def checkToken(content, tokensMap, tokensCombo):
-    tokens = {}
+    tokensFound = {}
     # For each type of tokens (ie 'AWS'...)
     for token in tokensMap:
         regexPattern = re.compile(token.getRegex())
@@ -32,23 +38,31 @@ def checkToken(content, tokensMap, tokensCombo):
         result = re.search(regexPattern, content)
         # If the regex matches, add the result of the match to the dict tokens and the token name found
         if result:
-                tokens[result] = token.getName()
+            cleanToken = clean(result) 
+            blacklist = token.getBlacklist()
+            foundbl = False
+            if blacklist:
+                for blacklistedPattern in blacklist:
+                    if blacklistedPattern in cleanToken:
+                        foundbl = True
+                if not foundbl:
+                    tokensFound[cleanToken] = token.getName()
     
     for combo in tokensCombo:
         found = True
-        result = []
+        result = [''] * len(combo.getTokens())
         for t in combo.getTokens():
             regexPattern = re.compile(t.getRegex())
             match = re.search(regexPattern, content)
-            result.append(match)
             if not match:
                 found = False
                 break
+            result[t.getDisplayOrder()-1] = clean(match)
         if found:
-            for r in result:
-                tokens[r] = combo.getName()
+            concatToken = ":".join(result)
+            tokensFound[concatToken] = combo.getName()
 
-    return tokens
+    return tokensFound
 
 def notifySlack(message):
     if not config.SLACK_WEBHOOKURL:
@@ -66,13 +80,11 @@ def writeToWordlist(content, wordlist):
 def displayResults(result, tokenResult, rawGitUrl, urlInfos):
     possibleTokenString = '[!] POSSIBLE '+tokenResult[result]+' TOKEN FOUND (keyword used:'+githubQuery+')'
     print(colored(possibleTokenString,'green'))
-    commitString = '[+] Commit date : '+urlInfos[2]+' by '+urlInfos[3]
+    commitString = '[+] Commit '+urlInfos[2]+' : '+urlInfos[3]+' by '+urlInfos[4]
     print(commitString)
     urlString = '[+] RAW URL : ' + rawGitUrl
     print(urlString)
-    cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP1, '', result.group(0))
-    cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP2, '', cleanToken)
-    tokenString = '[+] Token : ' + cleanToken
+    tokenString = '[+] Token : ' + result 
     print(tokenString.strip())
     repoString = '[+] Repository URL : '+urlInfos[1]
     print(repoString)
@@ -98,6 +110,21 @@ def parseResults(content):
             response = doRequestGitHub(commitUrl)
             commitData = json.loads(response.text)
             commitDate = commitData['commit']['author']['date']
+            
+            #Compare the current date and date of commit
+            currentTimestamp = int(time.time())
+            timestampCommit = int(time.mktime(datetime.strptime(commitDate, '%Y-%m-%dT%H:%M:%SZ').timetuple()))
+            compareCommitDate = (currentTimestamp - timestampCommit)/3600
+            
+            #Conversion in day if the commit date is > 24h
+            if compareCommitDate > 24: 
+              compareCommitDate = round(compareCommitDate/24)
+              compareCommitDate = '(' + str(compareCommitDate)+' days ago)'
+            else:
+             compareCommitDate = round(compareCommitDate)
+             compareCommitDate = '(' + str(compareCommitDate)+' hours ago)'
+            
+            #Parse JSON to get the user
             commitAuthor = commitData['commit']['author']['email']
             
             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
@@ -106,6 +133,7 @@ def parseResults(content):
                contentRaw[rawGitUrl] = []
                contentRaw[rawGitUrl].append(doRequestGitHub(rawGitUrl))
                contentRaw[rawGitUrl].append(config.GITHUB_BASE_URL+'/'+repoName)
+               contentRaw[rawGitUrl].append(compareCommitDate)
                contentRaw[rawGitUrl].append(commitDate)
                contentRaw[rawGitUrl].append(commitAuthor)
         return contentRaw

@@ -4,7 +4,7 @@ CLEAN_TOKEN_STEP2 = "[']"
 def initTokensMap():
     tokensList = []
     tokensCombo = []
-    tokensList.append(Token('AMAZON_AWS', '([^A-Z0-9]|^)(AKIA|A3T|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{12,}'))
+    tokensList.append(Token('AMAZON_AWS', '([^A-Z0-9]|^)(AKIA|A3T|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{12,}',['EXAMPLE']))
     tokensList.append(Token('FACEBOOK', '\W([0-9a-f]{32})$'))
     tokensList.append(Token('GITHUB_CLIENT_SECRET', '[\W]{1,2}([a-f0-9]{40})[\W]{1,2}$'))
     tokensList.append(Token('GOOGLE_FIREBASE_OR_MAPS', '(AIza[0-9A-Za-z\\-_]{35})'))
@@ -24,7 +24,7 @@ def initTokensMap():
     tokensList.append(Token('SENSITIVE_URL', '\b(([\w-]+://?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/)))'))
     tokensList.append(Token('SLACK_V2', '\W(xox[p|b|o|a]-[0-9]{1,}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})\W'))
     tokensList.append(Token('SLACK_V1', '\W(xox[p|b|o|a]-[0-9]{1,}-[0-9]{1,}-[a-zA-Z0-9]{24})\W'))
-    tokensList.append(Token('SLACK_WEBHOOK_URL', '(https://hooks.slack.com\/services\/T[A-Z0-9]{8}\/B[A-Z0-9]{8}\/[a-zA-Z0-9]{1,})'))
+    tokensList.append(Token('SLACK_WEBHOOK_URL', '(hooks.slack.com\/services\/T[A-Z0-9]{8}\/B[A-Z0-9]{8}\/[a-zA-Z0-9]{1,})',['0000','XXXX']))
     tokensList.append(Token('SQUARE_APP_SECRET', 'sq0[a-z]{3}-[0-9A-Za-z\-_]{43}'))
     tokensList.append(Token('SQUARE_PERSONAL_ACCESS_TOKEN', '\W(EAAA[a-zA-Z0-9_-]{60})\W'))
     tokensList.append(Token('STRIPE_LIVE_SECRET_KEY', '(sk_live_[0-9a-zA-Z]{24})'))
@@ -34,27 +34,35 @@ def initTokensMap():
     
 ## Tokens which need two keys to be interesting ##
 
-    googleSecret = Token('GOOGLE_SECRET', '\W([a-z0-9A-Z]{24})\W')
-    googleUrl = Token('GOOGLE_URL', '([0-9]{12}-[a-z0-9]{32}.apps.googleusercontent.com)')
+    googleSecret = Token('GOOGLE_SECRET', '[\'|\"|\:|\=](?=.+[A-Za-z\d_-])(?=.+\d)[A-Za-z\d_-]{24}[\'|\"|>|\s]', None, 2)
+    googleUrl = Token('GOOGLE_URL', '([0-9]{12}-[a-z0-9]{32}.apps.googleusercontent.com)', None, 1)
     tokensCombo.append(TokenCombo('GOOGLE', [googleSecret, googleUrl]))
 
-    twilioSID = Token('TWILIO_SID', '(AC[a-f0-9]{32}[^a-f0-9])')
-    twilioAUTH = Token('TWILIO_AUTH', '\W[a-f0-9]{32}\W')
+    twilioSID = Token('TWILIO_SID', '(AC[a-f0-9]{32}[^a-f0-9])', None, 1)
+    twilioAUTH = Token('TWILIO_AUTH', '\W[a-f0-9]{32}\W', None, 2)
     tokensCombo.append(TokenCombo('TWILIO', [twilioSID, twilioAUTH]))
  
     return tokensList, tokensCombo
 
 class Token:
 
-    def __init__(self, name, regex):
+    def __init__(self, name, regex, blacklist = [], displayOrder = 1):
         self.name = name
         self.regex = regex
+        self.blacklist = blacklist
+        self.displayOrder = displayOrder
     
     def getName(self):
         return self.name
     
     def getRegex(self):
         return self.regex
+
+    def getBlacklist(self):
+        return self.blacklist
+
+    def getDisplayOrder(self):
+        return self.displayOrder
 
 class TokenCombo:
 

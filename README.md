@@ -25,9 +25,26 @@ usage: gitGraber.py [-h] [-k KEYWORDSFILE] [-q QUERY] [-s] [-w WORDLIST]
 optional arguments:
   -h, --help                              Show this help message and exit
   -k KEYWORDSFILE, --keyword KEYWORDSFILE Specify a keywords file (-k keywordsfile.txt)
-  -q QUERY, --query QUERY                 Specify your query (-q "apikey")
+  -q QUERY, --query QUERY                 Specify your github query (-q "apikey")
   -s, --slack                             Enable slack notifications
   -w WORDLIST, --wordlist WORDLIST        Create a wordlist that fills dynamically with discovered filenames on GitHub
+``````````
+For example, to search for a specific word in github in combination with each word of the file keywordsfile.txt and output it to Slack  :
+
+``````````
+python3 gitGraber.py -k keywordsfile.txt -q YOURWORD -s
+``````````
+It is possible to search for a specific domain name for example, but this has to be surrounded by double quotes :
+
+``````````
+python3 gitGraber.py -k keywordsfile.txt -q \"yahoo.com\" -s
+``````````
+
+If you want to build a custom wordlist based on the files found on Github to use it then with your favorite fuzzing tool :
+
+
+``````````
+python3 gitGraber.py -k keywordsfile.txt -q \"yahoo.com\" -s -w mysuperwordlist.txt
 ``````````
 
 ## Dependencies
@@ -100,11 +117,11 @@ Some wordlists & regex have been created by us and some others are inspired from
 
 ## TODO
 
-- [ ] Add a false positive detection
+- [X] Add a false positive detection
 - [ ] Add args to only output results (to hide status code and other things)
-- [ ] Send only one notification for double tokens (for services like Twilio)
+- [X] Send only one notification for double tokens (for services like Twilio)
 - [ ] Filter to send notification only if commit date is > to date defined in args
-- [ ] Improve "commit date" notification to display something like "[+] Commit date (5 days ago)"
+- [X] Improve "commit date" notification to display something like "[+] Commit date (5 days ago)"
 - [ ] Add args to output results in file
 - [ ] Add multi threads
 - [ ] Improve token cleaning output
