@@ -40,7 +40,7 @@ It is possible to search for a specific domain name for example, but this has to
 python3 gitGraber.py -k keywordsfile.txt -q \"yahoo.com\" -s
 ``````````
 
-If you want to build a custom wordlist based on the files found on Github to use it then with your favorite fuzzing tool :
+If you want to build a custom wordlist based on the files found on Github to use it then with your favorite fuzzing tool, add argument ``-w`` :
 
 
 ``````````

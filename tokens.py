@@ -34,7 +34,7 @@ def initTokensMap():
     
 ## Tokens which need two keys to be interesting ##
 
-    googleSecret = Token('GOOGLE_SECRET', '[\'|\"|\:|\=](?=.+[A-Za-z\d_-])(?=.+\d)[A-Za-z\d_-]{24}[\'|\"|>|\s]', None, 2)
+    googleSecret = Token('GOOGLE_SECRET', '(\'|\"|\=)(?=(.*[0-9].*))(?=(.*[A-Z].*))(?=([0-9A-Za-z-_]{24})(\1|(\s*(\r\n|\r|\n))))(?!.*\1.*\1.*)(?=(.*[a-z].*))(.*)(\1|(\s*(\r\n|\r|\n)))', None, 2)
     googleUrl = Token('GOOGLE_URL', '([0-9]{12}-[a-z0-9]{32}.apps.googleusercontent.com)', None, 1)
     tokensCombo.append(TokenCombo('GOOGLE', [googleSecret, googleUrl]))
 
