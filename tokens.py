@@ -1,4 +1,4 @@
-CLEAN_TOKEN_STEP1 = '[\=;\\"\<\>]'
+CLEAN_TOKEN_STEP1 = '[\=;\\"\<\>,)(]'
 CLEAN_TOKEN_STEP2 = "[']"
 
 def initTokensMap():
@@ -31,10 +31,10 @@ def initTokensMap():
     tokensList.append(Token('STRIPE_LIVE_RESTRICTED_KEY', '(rk_live_[0-9a-zA-Z]{24,34})'))
     tokensList.append(Token('TWITTER', '[\W]{1,2}([a-zA-Z0-9]{50})[\W]{1,2}$'))
     tokensList.append(Token('TWILIO_API_KEY', 'SK[0-9a-fA-F]{32}'))
-    
+
 ## Tokens which need two keys to be interesting ##
 
-    googleSecret = Token('GOOGLE_SECRET', '(\'|\"|\=)(?=(.*[0-9].*))(?=(.*[A-Z].*))(?=([0-9A-Za-z-_]{24})(\1|(\s*(\r\n|\r|\n))))(?!.*\1.*\1.*)(?=(.*[a-z].*))(.*)(\1|(\s*(\r\n|\r|\n)))', None, 2)
+    googleSecret = Token('GOOGLE_SECRET', r'(\'|\"|\=)(?=(.*[0-9].*))(?=(.*[A-Z].*))(?=([0-9A-Za-z-_]{24})(\1|(\s*(\r\n|\r|\n))))(?!.*\1.*\1.*)(?=(.*[a-z].*))(.*)(\1|(\s*(\r\n|\r|\n)))', None, 2)
     googleUrl = Token('GOOGLE_URL', '([0-9]{12}-[a-z0-9]{32}.apps.googleusercontent.com)', None, 1)
     tokensCombo.append(TokenCombo('GOOGLE', [googleSecret, googleUrl]))
 
