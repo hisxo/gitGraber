@@ -17,6 +17,26 @@ Regex are supposed to be as accurate as possible. Sometimes, maybe you will have
 
 We prefer to reduce false positive instead of sending notification for every "standard" API keys which could found by gitGraber but irrelevant for your monitoring.
 
+# F.A.Q
+
+## Why I only see "Github query" and "Status code : 200" in output ?
+
+_gitGraber display some things directly in the CLI: GitHub request, status code abuse detection (200 or 403)... and if you don't see something like `` [+] POSSIBLE FOO TOKEN FOUND`` its simply because gitGraber did not find secrets tokens for your defined keyword._
+
+## About the error message "Abuse detection reached for token"
+
+_This message appears when GitHub detects a large number of requests from your own GitHub token. Don't worry, gitGraber can handle this and it will try to use another token defined in the ``config.py`` file. Note: This is a temporary limit and you don't need to create another token._
+
+## Do I will receive same tokens for same repository every time that I run gitGraber ?
+
+_No, to avoid this, gitGraber stores all repository URLs in a file named `` rawGitUrls.txt``. If a repository has already been scanned by gitGraber and found an API key, you will not receive a notification._
+
+## How do I set a blacklisted pattern for a specific token ? 
+
+_You have to edit the tokens.py file and add the pattern as a list argument when initializing the token. FFor example, to add the pattern XXXX to the MAILCHIMP token, the line `` tokensList.append(Token('MAILCHIMP', '\W(?:[a-f0-9]{32}(-us[0-9]{1,2}))\W'))`` becomes `` tokensList.append(Token('MAILCHIMP', '\W(?:[a-f0-9]{32}(-us[0-9]{1,2}))\W', ['XXXX']))``._
+
+
+
 ## Usage
 
 ``````````
