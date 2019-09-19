@@ -16,6 +16,7 @@ from pprint import pprint
 from termcolor import colored
 from urllib.parse import urlparse
 
+
 def createEmptyBinaryFile(name):
     f = open(name, 'wb')
     f.write(1*b'\0')
@@ -88,7 +89,13 @@ def displayResults(result, tokenResult, rawGitUrl, urlInfos):
     print(tokenString.strip())
     repoString = '[+] Repository URL : '+urlInfos[1]
     print(repoString)
-    return possibleTokenString+'\n'+commitString+'\n'+urlString+'\n'+tokenString+'\n'+repoString
+    if urlInfos[5]:
+        orgString = '[+] User Organizations : '+','.join(urlInfos[5])
+        print(orgString)
+        orgString = '\n'+orgString
+    else:
+        orgString = ''
+    return possibleTokenString+'\n'+commitString+'\n'+urlString+'\n'+tokenString+'\n'+repoString+orgString
 
 def parseResults(content):
     data = json.loads(content)
@@ -98,16 +105,24 @@ def parseResults(content):
         for item in data['items']:
             gitUrl = item['url']
             repoName = item['repository']['full_name']
-			
+            orgUrl = item['repository']['owner']['organizations_url']
             #Parse JSON to get info about repository
             response = doRequestGitHub(gitUrl)
             rawUrl = json.loads(response.text)
             rawGitUrl = rawUrl['download_url']
+          
+            #Parse JSON to get info about organizations
+            if orgUrl not in checkedOrgs.keys():
+                checkedOrgs[orgUrl] = []
+                response = doRequestGitHub(orgUrl, True)
+                orgData = json.loads(response.text)
+                for org in orgData:
+                    checkedOrgs[orgUrl].append(org['login'])
             
             #Request to extract data about repository and user
             commitHash = gitUrl.split('ref=')[1]
             commitUrl = config.GITHUB_API_COMMIT_URL+repoName+'/commits/'+commitHash
-            response = doRequestGitHub(commitUrl)
+            response = doRequestGitHub(commitUrl, True)
             commitData = json.loads(response.text)
             commitDate = commitData['commit']['author']['date']
             
@@ -136,6 +151,7 @@ def parseResults(content):
                contentRaw[rawGitUrl].append(compareCommitDate)
                contentRaw[rawGitUrl].append(commitDate)
                contentRaw[rawGitUrl].append(commitAuthor)
+               contentRaw[rawGitUrl].append(checkedOrgs[orgUrl])
         return contentRaw
 
     except Exception as e:
@@ -186,22 +202,24 @@ def updateGithubToken(url, token, response):
                 tokenState['reset'] = int(time.time()) + 1 + int(response.headers['Retry-After'])
             config.GITHUB_TOKENS_STATES[path][i] = tokenState
 
-def doRequestGitHub(url, verbose=False):
+def doRequestGitHub(url, authd=True, verbose=False):
     nbMaxTry = config.GITHUB_MAX_RETRY
     while nbMaxTry > 0:
-        token = getGithubToken(url)
         if verbose:
             print(colored('[i] Github query : ' + url, 'yellow'))
         headers = {
-            'Accept': 'application/vnd.github.v3.text-match+json',
-            'Authorization': 'token ' + token
+            'Accept': 'application/vnd.github.v3.text-match+json'
         }
+        if authd:
+            token = getGithubToken(url)
+            headers['Authorization'] = 'token '+ token
         try:
             response = requests.get(url, headers=headers)
             nbMaxTry = nbMaxTry - 1
             if verbose:
-                print('[i] Status code : ' + str(response.status_code))
-            updateGithubToken(url, token, response)
+                print('[i] Status code : ' + str(response.status_code))    
+            if authd:
+                updateGithubToken(url, token, response)
             if response.status_code == 200:
                 return response
                 
@@ -233,7 +251,7 @@ def searchGithub(keywordsFile, args):
     with open(keywordsFile, 'r') as myfile:
         for keyword in myfile:
             url = config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS
-            response = doRequestGitHub(url, True)
+            response = doRequestGitHub(url, True, True)
             content = parseResults(response.text)
             if content:
                 for rawGitUrl in content.keys():
@@ -267,7 +285,7 @@ if not args.query or args.query == "":
 keywordsFile = args.keywordsFile
 githubQuery = args.query
 config.GITHUB_TOKENS_STATES = {}
-
+checkedOrgs = {}
 
 # If wordlist, check if file is binary initialized for mmap 
 if(args.wordlist):
