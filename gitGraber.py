@@ -11,6 +11,7 @@ import config
 import tokens
 import os
 import time
+import urllib.parse
 from datetime import datetime
 from pprint import pprint
 from termcolor import colored
@@ -250,7 +251,7 @@ def searchGithub(keywordsFile, args):
 
     with open(keywordsFile, 'r') as myfile:
         for keyword in myfile:
-            url = config.GITHUB_API_URL + githubQuery +' '+keyword.strip() +config.GITHUB_SEARCH_PARAMS
+            url = config.GITHUB_API_URL + urllib.parse.quote(githubQuery +' '+keyword.strip()) +config.GITHUB_SEARCH_PARAMS
             response = doRequestGitHub(url, True, True)
             content = parseResults(response.text)
             if content:
