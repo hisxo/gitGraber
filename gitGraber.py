@@ -12,10 +12,12 @@ import tokens
 import os
 import time
 import urllib.parse
+from functools import partial
 from datetime import datetime
 from pprint import pprint
 from termcolor import colored
 from urllib.parse import urlparse
+from multiprocessing.dummy import Pool
 
 
 def createEmptyBinaryFile(name):
@@ -133,7 +135,7 @@ def parseResults(content):
             compareCommitDate = (currentTimestamp - timestampCommit)/3600
             
             #Conversion in day if the commit date is > 24h
-            if compareCommitDate > 24: 
+            if compareCommitDate > 24:
               compareCommitDate = round(compareCommitDate/24)
               compareCommitDate = '(' + str(compareCommitDate)+' days ago)'
             else:
@@ -182,7 +184,7 @@ def getGithubToken(url):
             minTimeToken = tokenState
 
     sleepTime = minTimeToken['reset'] - int(time.time()) + 1
-    if sleepTime > 0:        
+    if sleepTime > 0:
         print('[i] Sleeping ' + str(sleepTime) + ' sec')
         time.sleep(sleepTime)
 
@@ -218,7 +220,7 @@ def doRequestGitHub(url, authd=True, verbose=False):
             response = requests.get(url, headers=headers)
             nbMaxTry = nbMaxTry - 1
             if verbose:
-                print('[i] Status code : ' + str(response.status_code))    
+                print('[i] Status code : ' + str(response.status_code))
             if authd:
                 updateGithubToken(url, token, response)
             if response.status_code == 200:
@@ -242,32 +244,38 @@ def doRequestGitHub(url, authd=True, verbose=False):
 
         except UnicodeEncodeError as e:
             # TODO improve exception management
-            print(e.msg)
+            print( colored("%s" % e.msg), 'red')
             pass
-                        
+
+def doSearchGithub(args,tokenMap, tokenCombos,keyword):
+    url = config.GITHUB_API_URL + urllib.parse.quote(githubQuery +' '+keyword.strip()) +config.GITHUB_SEARCH_PARAMS
+    print(url)
+    response = doRequestGitHub(url, True, True)
+    content = parseResults(response.text)
+    if content:
+        for rawGitUrl in content.keys():
+            tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
+            for token in tokensResult.keys():
+                displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
+                if args.slack:
+                    notifySlack(displayMessage)
+                if args.wordlist:
+                    writeToWordlist(rawGitUrl, args.wordlist)
+
 def searchGithub(keywordsFile, args):
-    keywordSearches = []
     tokenMap, tokenCombos = tokens.initTokensMap()
 
-    with open(keywordsFile, 'r') as myfile:
-        for keyword in myfile:
-            url = config.GITHUB_API_URL + urllib.parse.quote(githubQuery +' '+keyword.strip()) +config.GITHUB_SEARCH_PARAMS
-            response = doRequestGitHub(url, True, True)
-            content = parseResults(response.text)
-            if content:
-                for rawGitUrl in content.keys():
-                    tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
-                    for token in tokensResult.keys():
-                        displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
-                        if args.slack:
-                            notifySlack(displayMessage)
-                        if args.wordlist:
-                            writeToWordlist(rawGitUrl, args.wordlist)
+    t_keywords = open(keywordsFile).read().split("\n")
 
-    return keywordSearches
+    pool = Pool( int(args.max_threads) )
+    pool.map( partial(doSearchGithub,args,tokenMap, tokenCombos), t_keywords )
+    pool.close()
+    pool.join()
+
 
 parser = argparse.ArgumentParser()
 argcomplete.autocomplete(parser)
+parser.add_argument('-t', '--threads', action='store', dest='max_threads', help='Max threads to speed the requests on Github (take care about the rate limit)', default="3")
 parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)', default="wordlists/keywords.txt")
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
