@@ -289,7 +289,7 @@ parser.add_argument('-t', '--threads', action='store', dest='max_threads', help=
 parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)', default="wordlists/keywords.txt")
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
-parser.add_argument('-t', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
+parser.add_argument('-tg', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
 args = parser.parse_args()
 
