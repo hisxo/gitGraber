@@ -74,6 +74,14 @@ def notifySlack(message):
         exit()
     requests.post(config.SLACK_WEBHOOKURL, json={'text': ':new:'+message})
 
+def notifyTelegram(message):
+    if not config.TELEGRAM_CONFIG or not config.TELEGRAM_CONFIG.get("token") or not config.TELEGRAM_CONFIG.get("chat_id"):
+        print('Please define Telegram config to enable notifications')
+        exit()
+
+    telegramUrl = "https://api.telegram.org/bot{}/sendMessage".format(config.TELEGRAM_CONFIG.get("token"))
+    requests.post(telegramUrl, json={'text': message, 'chat_id': config.TELEGRAM_CONFIG.get("chat_id")})
+
 def writeToWordlist(content, wordlist):
     f = open(wordlist, 'a+')
     s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
@@ -259,6 +267,8 @@ def doSearchGithub(args,tokenMap, tokenCombos,keyword):
                 displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
                 if args.slack:
                     notifySlack(displayMessage)
+                if args.telegram:
+                    notifyTelegram(displayMessage)
                 if args.wordlist:
                     writeToWordlist(rawGitUrl, args.wordlist)
 
@@ -279,6 +289,7 @@ parser.add_argument('-t', '--threads', action='store', dest='max_threads', help=
 parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)', default="wordlists/keywords.txt")
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
+parser.add_argument('-t', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
 args = parser.parse_args()
 
