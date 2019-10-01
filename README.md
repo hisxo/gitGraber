@@ -165,8 +165,9 @@ Some wordlists & regex have been created by us and some others are inspired from
 
 _Thanks for your contribution and for your help to improve gitGraber:_
 
-- [@gwendallecoguic](https://github.com/hisxo/gitGraber/pulls?utf8=%E2%9C%93&q=is%3Apr+author%3Agwen001)
 - [@Darkpills](https://github.com/hisxo/gitGraber/pulls?q=is%3Apr+author%3Adarkpills)
+- [@gwendallecoguic](https://github.com/hisxo/gitGraber/pulls?utf8=%E2%9C%93&q=is%3Apr+author%3Agwen001)
+- [@overjt](https://github.com/hisxo/gitGraber/pulls?utf8=%E2%9C%93&q=is%3Apr+author%3Aoverjt)
 
 # Disclaimer
 
