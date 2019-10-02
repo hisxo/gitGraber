@@ -56,7 +56,6 @@ def monitor():
             job.minute.every(30)
             my_cron.write() 
 
-
 def checkToken(content, tokensMap, tokensCombo):
     tokensFound = {}
     # For each type of tokens (ie 'AWS'...)
