@@ -46,6 +46,7 @@ optional arguments:
   -h, --help                              Show this help message and exit
   -k KEYWORDSFILE, --keyword KEYWORDSFILE Specify a keywords file (-k keywordsfile.txt)
   -q QUERY, --query QUERY                 Specify your github query (-q "apikey")
+  -m, --monitor                           Enable monitoring of your search query by creating cron job [Every 30 mins]
   -s, --slack                             Enable slack notifications
   -tg, --telegram                         Enable telegram notifications
   -w WORDLIST, --wordlist WORDLIST        Create a wordlist that fills dynamically with discovered filenames on GitHub
@@ -67,6 +68,13 @@ If you want to build a custom wordlist based on the files found on Github to use
 ``````````
 python3 gitGraber.py -k keywordsfile.txt -q \"yahoo.com\" -s -w mysuperwordlist.txt
 ``````````
+
+If you want to monitor your search query every 30 mins you can use the `-m` flag that tells gitGraber to create a cron job based on your query :
+
+``````````
+python3 gitGraber.py -k keywordsfile.txt -q \"yahoo.com\" -s -m
+``````````
+The above will search for secrets every 30 min on your search query & send you a slack notification whenever there are any hits.
 
 ## Dependencies
 
@@ -93,9 +101,6 @@ Before to start **gitGraber** you need to modify the configuration file ``config
 
 To start gitGraber : ``python3 gitGraber.py -k wordlists/keywords.txt -q "uber" -s``
 
-_We recommend creating a cron that will execute the script regulary_ :
-
-``*/15 * * * * cd /BugBounty/gitGraber/ && /usr/bin/python3 gitGraber.py -k wordlists/keywords.txt -q "uber" -s >/dev/null 2>&1``
 
 ## Which API Keys & services are supported ? (Last update : September 12th, 2019)
 
