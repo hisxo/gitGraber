@@ -251,8 +251,11 @@ def doRequestGitHub(url, authd=True, verbose=False):
                 print(colored(response.text,'red'))
 
         except UnicodeEncodeError as e:
-            # TODO improve exception management
-            print( colored("%s" % e.msg), 'red')
+            print(colored("%s" % e.msg), 'red')
+            pass
+        
+        except requests.exceptions.ConnectionError as e:
+            print(colored('Connection to Github failed', 'red'))
             pass
 
 def doSearchGithub(args,tokenMap, tokenCombos,keyword):
