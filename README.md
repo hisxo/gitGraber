@@ -68,6 +68,9 @@ If you want to build a custom wordlist based on the files found on Github to use
 python3 gitGraber.py -k keywordsfile.txt -q \"yahoo.com\" -s -w mysuperwordlist.txt
 ``````````
 
+There is also an option of running this in Docker if you want to. Just build the Docker image and execute it.
+
+
 ## Dependencies
 
 gitGraber needs some dependencies, to install them on your environment:
