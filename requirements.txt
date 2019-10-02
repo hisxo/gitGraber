@@ -1,3 +1,4 @@
-requests
-termcolor
-argcomplete
+requests==2.18.4
+argcomplete==1.10.0
+python_crontab==2.3.9
+termcolor==1.1.0
