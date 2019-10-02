@@ -35,21 +35,22 @@ def clean(result):
     return re.sub(tokens.CLEAN_TOKEN_STEP2, '', cleanToken)
 
 def monitor():
-        cmd='/usr/bin/python3 '+str(path_script)+'/gitGraber.py -q "'+args.query+'"'
-        my_cron = CronTab(user=True)
-        if config.SLACK_WEBHOOKURL:
-            if(args.wordlist):
-                job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+' -w '+args.wordlist+'')
-            else:
-                job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+'')
-        elif config.TELEGRAM_CONFIG or config.TELEGRAM_CONFIG.get("token") or config.TELEGRAM_CONFIG.get("chat_id"):
-            if(args.wordlist):
-                job = my_cron.new(command=cmd+' -tg -k '+args.keywordsFile+' -w '+args.wordlist+'')
-            else:
-                job = my_cron.new(command=cmd+' -tg -k '+args.keywordsFile+'')
+    cmd='/usr/bin/python3 '+str(path_script)+'/gitGraber.py -q "'+args.query+'"'
+    my_cron = CronTab(user=True)
+    if config.SLACK_WEBHOOKURL:
+        if(args.wordlist):
+            job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+' -w '+args.wordlist+'')
+        else:
+            job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+'')
+    elif config.TELEGRAM_CONFIG or config.TELEGRAM_CONFIG.get("token") or config.TELEGRAM_CONFIG.get("chat_id"):
+        if(args.wordlist):
+            job = my_cron.new(command=cmd+' -tg -k '+args.keywordsFile+' -w '+args.wordlist+'')
+        else:
+            job = my_cron.new(command=cmd+' -tg -k '+args.keywordsFile+'')
 
-        job.minute.every(30)
-        my_cron.write()    
+    job.minute.every(30)
+    my_cron.write()
+
 
 def checkToken(content, tokensMap, tokensCombo):
     tokensFound = {}
