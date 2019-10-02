@@ -18,6 +18,7 @@ from pprint import pprint
 from termcolor import colored
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
+from crontab import CronTab
 
 
 def createEmptyBinaryFile(name):
@@ -32,6 +33,28 @@ def initFile(name):
 def clean(result):
     cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP1, '', result.group(0))
     return re.sub(tokens.CLEAN_TOKEN_STEP2, '', cleanToken)
+
+def monitor():
+    cmd='/usr/bin/python3 '+str(path_script)+'/gitGraber.py -q "'+args.query+'"'
+    my_cron = CronTab(user=True)
+    if args.slack and config.SLACK_WEBHOOKURL:
+        if(args.wordlist):
+            job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+' -w '+args.wordlist+'')
+            job.minute.every(30)
+            my_cron.write() 
+        else:
+            job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+'')
+            job.minute.every(30)
+            my_cron.write() 
+    elif args.telegram and (config.TELEGRAM_CONFIG or config.TELEGRAM_CONFIG.get("token") or config.TELEGRAM_CONFIG.get("chat_id")):
+        if(args.wordlist):
+            job = my_cron.new(command=cmd+' -tg -k '+args.keywordsFile+' -w '+args.wordlist+'')
+            job.minute.every(30)
+            my_cron.write() 
+        else:
+            job = my_cron.new(command=cmd+' -tg -k '+args.keywordsFile+'')
+            job.minute.every(30)
+            my_cron.write() 
 
 def checkToken(content, tokensMap, tokensCombo):
     tokensFound = {}
@@ -293,6 +316,7 @@ parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
 parser.add_argument('-tg', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
+parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your query by adding a cron job for every 30 mins',default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
 args = parser.parse_args()
 
@@ -307,12 +331,18 @@ if not args.query or args.query == "":
 
 keywordsFile = args.keywordsFile
 githubQuery = args.query
+path_script=os.path.dirname(os.path.realpath(__file__))
 config.GITHUB_TOKENS_STATES = {}
 checkedOrgs = {}
 
 # If wordlist, check if file is binary initialized for mmap 
 if(args.wordlist):
     initFile(args.wordlist)
+# If monitor, create crontab for every 15 mins by default[ re-construct users CLI ]
+if (args.monitor):
+    monitor()
+else:
+    pass
 
 # Init URL file 
 initFile(config.GITHUB_URL_FILE)
