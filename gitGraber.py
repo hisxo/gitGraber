@@ -18,7 +18,6 @@ from pprint import pprint
 from termcolor import colored
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
-#pip3 install python-crontab/added to requirements.txt
 from crontab import CronTab
 
 
@@ -309,7 +308,7 @@ parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
 parser.add_argument('-tg', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
-parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your query by adding a cron job for every 15 mins',default=False)
+parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your query by adding a cron job for every 30 mins',default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
 args = parser.parse_args()
 
