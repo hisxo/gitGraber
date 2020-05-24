@@ -72,8 +72,8 @@ def checkToken(content, tokensMap, tokensCombo):
                 for blacklistedPattern in blacklist:
                     if blacklistedPattern in cleanToken:
                         foundbl = True
-                if not foundbl:
-                    tokensFound[cleanToken] = token.getName()
+            if not foundbl:
+                tokensFound[cleanToken] = token.getName()
     
     for combo in tokensCombo:
         found = True
