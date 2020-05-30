@@ -174,6 +174,7 @@ _Thanks for your contribution and for your help to improve gitGraber:_
 - [@gwendallecoguic](https://github.com/hisxo/gitGraber/pulls?utf8=%E2%9C%93&q=is%3Apr+author%3Agwen001)
 - [@overjt](https://github.com/hisxo/gitGraber/pulls?utf8=%E2%9C%93&q=is%3Apr+author%3Aoverjt)
 - [@Abss0x7tbh](https://github.com/hisxo/gitGraber/pulls?utf8=%E2%9C%93&q=is%3Apr+author%3AAbss0x7tbh)
+- [@PatrikHudak](https://github.com/hisxo/gitGraber/pull/24)
 
 # Disclaimer
 
