@@ -285,18 +285,19 @@ def doSearchGithub(args,tokenMap, tokenCombos,keyword):
     url = config.GITHUB_API_URL + urllib.parse.quote(githubQuery +' '+keyword.strip()) +config.GITHUB_SEARCH_PARAMS
     print(url)
     response = doRequestGitHub(url, True, True)
-    content = parseResults(response.text)
-    if content:
-        for rawGitUrl in content.keys():
-            tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
-            for token in tokensResult.keys():
-                displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
-                if args.slack:
-                    notifySlack(displayMessage)
-                if args.telegram:
-                    notifyTelegram(displayMessage)
-                if args.wordlist:
-                    writeToWordlist(rawGitUrl, args.wordlist)
+    if response:
+        content = parseResults(response.text)
+        if content:
+            for rawGitUrl in content.keys():
+                tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
+                for token in tokensResult.keys():
+                    displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
+                    if args.slack:
+                        notifySlack(displayMessage)
+                    if args.telegram:
+                        notifyTelegram(displayMessage)
+                    if args.wordlist:
+                        writeToWordlist(rawGitUrl, args.wordlist)
 
 def searchGithub(keywordsFile, args):
     tokenMap, tokenCombos = tokens.initTokensMap()
