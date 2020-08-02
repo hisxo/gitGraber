@@ -1,3 +1,5 @@
+!!Use with Caution! Only for educational Purpose
+
 ![gitgraberlogo](https://i.ibb.co/ry5K7Hv/logo-gitgraber.png)
 
 <img src="https://img.shields.io/badge/made%20with-python-blue.svg" alt="made with python 3.x"> <img src="https://img.shields.io/github/issues/hisxo/gitgraber.svg">
