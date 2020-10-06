@@ -194,10 +194,7 @@ def parseResults(content):
 
 # Transform the config github token list to a dict of key values
 def initGithubToken():
-    init = []
-    for token in config.GITHUB_TOKENS:
-        init.append({"token": token, "remaining": 1, "reset": time.time()})
-    return init
+    return [{"token": token, "remaining": 1, "reset": time.time()} for token in config.GITHUB_TOKENS]
 
 # Manages a token stores with request remaining count and reset time
 # for each github token
