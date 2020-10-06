@@ -321,10 +321,6 @@ parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your 
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
 args = parser.parse_args()
 
-if not args.keywordsFile:
-    print('No keyword (-k or --keyword) file is specified')
-    exit()
-
 if not args.query or args.query == "":
     print('No query (-q or --query) is specified, default query will be used')
     args.query = ' '
