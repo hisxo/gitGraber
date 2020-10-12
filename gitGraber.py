@@ -37,7 +37,16 @@ def clean(result):
 def monitor():
     cmd='/usr/bin/python3 '+str(path_script)+'/gitGraber.py -q "'+args.query+'"'
     my_cron = CronTab(user=True)
-    if args.slack and config.SLACK_WEBHOOKURL:
+    if args.discord and config.DISCORD_WEBHOOKURL:
+        if(args.wordlist):
+            job = my_cron.new(command=cmd+' -d -k '+args.keywordsFile+' -w '+args.wordlist+'')
+            job.minute.every(30)
+            my_cron.write() 
+        else:
+            job = my_cron.new(command=cmd+' -d -k '+args.keywordsFile+'')
+            job.minute.every(30)
+            my_cron.write() 
+    elif args.slack and config.SLACK_WEBHOOKURL:
         if(args.wordlist):
             job = my_cron.new(command=cmd+' -s -k '+args.keywordsFile+' -w '+args.wordlist+'')
             job.minute.every(30)
@@ -90,6 +99,15 @@ def checkToken(content, tokensMap, tokensCombo):
             tokensFound[concatToken] = combo.getName()
 
     return tokensFound
+
+
+def notifyDiscord(message):
+    if not config.DISCORD_WEBHOOKURL:
+        print('Please define Discord Webhook URL to enable notifications')
+        exit()
+    data={}
+    data['content']=message
+    requests.post(config.DISCORD_WEBHOOKURL,data=json.dumps(data) , headers={"Content-Type": "application/json"})
 
 def notifySlack(message):
     if not config.SLACK_WEBHOOKURL:
@@ -292,6 +310,8 @@ def doSearchGithub(args,tokenMap, tokenCombos,keyword):
                 tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
                 for token in tokensResult.keys():
                     displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
+                    if args.discord:
+                        notifyDiscord(displayMessage)
                     if args.slack:
                         notifySlack(displayMessage)
                     if args.telegram:
@@ -315,6 +335,7 @@ argcomplete.autocomplete(parser)
 parser.add_argument('-t', '--threads', action='store', dest='max_threads', help='Max threads to speed the requests on Github (take care about the rate limit)', default="3")
 parser.add_argument('-k', '--keyword', action='store', dest='keywordsFile', help='Specify a keywords file (-k keywordsfile.txt)', default="wordlists/keywords.txt")
 parser.add_argument('-q', '--query', action='store', dest='query', help='Specify your query (-q "myorg")')
+parser.add_argument('-d', '--discord', action='store_true', help='Enable discord notifications', default=False)
 parser.add_argument('-s', '--slack', action='store_true', help='Enable slack notifications', default=False)
 parser.add_argument('-tg', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
 parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your query by adding a cron job for every 30 mins',default=False)
