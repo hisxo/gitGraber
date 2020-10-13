@@ -212,10 +212,7 @@ def parseResults(content):
 
 # Transform the config github token list to a dict of key values
 def initGithubToken():
-    init = []
-    for token in config.GITHUB_TOKENS:
-        init.append({"token": token, "remaining": 1, "reset": time.time()})
-    return init
+    return [{"token": token, "remaining": 1, "reset": time.time()} for token in config.GITHUB_TOKENS]
 
 # Manages a token stores with request remaining count and reset time
 # for each github token
@@ -341,10 +338,6 @@ parser.add_argument('-tg', '--telegram', action='store_true', help='Enable teleg
 parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your query by adding a cron job for every 30 mins',default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
 args = parser.parse_args()
-
-if not args.keywordsFile:
-    print('No keyword (-k or --keyword) file is specified')
-    exit()
 
 if not args.query or args.query == "":
     print('No query (-q or --query) is specified, default query will be used')
