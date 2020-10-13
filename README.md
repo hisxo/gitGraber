@@ -47,6 +47,7 @@ optional arguments:
   -k KEYWORDSFILE, --keyword KEYWORDSFILE Specify a keywords file (-k keywordsfile.txt)
   -q QUERY, --query QUERY                 Specify your github query (-q "apikey")
   -m, --monitor                           Enable monitoring of your search query by creating cron job [Every 30 mins]
+  -d, --discord                           Enable discord notifications
   -s, --slack                             Enable slack notifications
   -tg, --telegram                         Enable telegram notifications
   -w WORDLIST, --wordlist WORDLIST        Create a wordlist that fills dynamically with discovered filenames on GitHub
@@ -87,6 +88,7 @@ gitGraber needs some dependencies, to install them on your environment:
 Before to start **gitGraber** you need to modify the configuration file ``config.py`` :
 
 - Add your own Github tokens (_Personal access tokens_) : ``GITHUB_TOKENS = ['yourToken1Here','yourToken2Here']``
+- Add your own Discord Webhook : ``DISCORD_WEBHOOKURL = 'https://discordapp.com/api/webhooks/7XXXX/XXXXXX'``
 - Add your own Slack Webhook : ``SLACK_WEBHOOKURL = 'https://hooks.slack.com/services/TXXXX/BXXXX/XXXXXXX'``
 - Add your own Telegram Config : ``TELEGRAM_CONFIG = {
     "token": "XXXXX:xXXXXXXXXXXXXX",
@@ -96,6 +98,7 @@ Before to start **gitGraber** you need to modify the configuration file ``config
 | Service	| Link                                                                                                                  | 
 |---------|-----------------------------------------------------------------------------------------------------------------------|
 | GitHub  | *[How to create GitHub API token](https://github.com/settings/tokens)*                                                |
+| Discord | *[How to create Discord Webhook URL](https://help.dashe.io/en/articles/2521940-how-to-create-a-discord-webhook-url)* |
 | Slack   | *[How to create Slack Webhook URL](https://get.slack.help/hc/en-us/articles/115005265063-Incoming-WebHooks-for-Slack)*|
 | Telegram | *[How to create Telegram bot](https://medium.com/@xabaras/sending-a-message-to-a-telegram-channel-the-easy-way-eb0a0b32968)*|
 
