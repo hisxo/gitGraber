@@ -20,6 +20,12 @@ from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
 from crontab import CronTab
 
+def getFilenameForQuery(query):
+    if query:
+        query_name = query.replace(" ", "_")
+        return f'rawGitUrls_{query_name}.txt'
+    else:
+        return 'rawGitUrls.txt'
 
 def createEmptyBinaryFile(name):
     f = open(name, 'wb')
@@ -27,8 +33,18 @@ def createEmptyBinaryFile(name):
     f.close()
 
 def initFile(name):
-    if not name or os.path.getsize(name) == 0:
-        createEmptyBinaryFile(name)
+    if not os.path.exists(name) or os.path.getsize(name) == 0:
+        with open(name, 'wb') as f:
+            f.write(b'\0')
+
+    f = open(name, 'a+')
+    
+    # Check if the file is empty
+    if f.tell() == 0:
+        f.write("Initialized\n")
+        f.flush()  # Ensure the content is written to the file
+    
+    f.close()
 
 def clean(result):
     cleanToken = re.sub(tokens.CLEAN_TOKEN_STEP1, '', result.group(0))
@@ -149,7 +165,7 @@ def displayResults(result, tokenResult, rawGitUrl, urlInfos):
         orgString = ''
     return possibleTokenString+'\n'+commitString+'\n'+urlString+'\n'+tokenString+'\n'+repoString+orgString
 
-def parseResults(content):
+def parseResults(content, limit_days=None):
     data = json.loads(content)
     contentRaw = {}
     f = open(config.GITHUB_URL_FILE, 'a+', encoding='utf-8')
@@ -182,7 +198,11 @@ def parseResults(content):
             currentTimestamp = int(time.time())
             timestampCommit = int(time.mktime(datetime.strptime(commitDate, '%Y-%m-%dT%H:%M:%SZ').timetuple()))
             compareCommitDate = (currentTimestamp - timestampCommit)/3600
-            
+           
+            # Check if the commit is within the user-specified limit
+            if limit_days is not None and compareCommitDate > limit_days * 24:
+                continue
+
             #Conversion in day if the commit date is > 24h
             if compareCommitDate > 24:
               compareCommitDate = round(compareCommitDate/24)
@@ -301,7 +321,7 @@ def doSearchGithub(args,tokenMap, tokenCombos,keyword):
     print(url)
     response = doRequestGitHub(url, True, True)
     if response:
-        content = parseResults(response.text)
+        content = parseResults(response.text, args.limit_days)
         if content:
             for rawGitUrl in content.keys():
                 tokensResult = checkToken(content[rawGitUrl][0].text, tokenMap, tokenCombos)
@@ -337,6 +357,7 @@ parser.add_argument('-s', '--slack', action='store_true', help='Enable slack not
 parser.add_argument('-tg', '--telegram', action='store_true', help='Enable telegram notifications', default=False)
 parser.add_argument('-m', '--monitor', action='store_true', help='Monitors your query by adding a cron job for every 30 mins',default=False)
 parser.add_argument('-w', '--wordlist', action='store', dest='wordlist', help='Create a wordlist that fills dynamically with discovered filenames on GitHub')
+parser.add_argument('-l', '--limit', action='store', dest='limit_days', type=int, help='Limit the results to commits less than N days old', default=None)
 args = parser.parse_args()
 
 if not args.query or args.query == "":
@@ -353,13 +374,14 @@ checkedOrgs = {}
 # If wordlist, check if file is binary initialized for mmap 
 if(args.wordlist):
     initFile(args.wordlist)
-# If monitor, create crontab for every 15 mins by default[ re-construct users CLI ]
+# If monitor, create crontab for every 15 mins by default
 if (args.monitor):
     monitor()
 else:
     pass
 
 # Init URL file 
+config.GITHUB_URL_FILE = getFilenameForQuery(args.query)
 initFile(config.GITHUB_URL_FILE)
 
 # Send requests to Github API
