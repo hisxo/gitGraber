@@ -51,6 +51,7 @@ optional arguments:
   -s, --slack                             Enable slack notifications
   -tg, --telegram                         Enable telegram notifications
   -w WORDLIST, --wordlist WORDLIST        Create a wordlist that fills dynamically with discovered filenames on GitHub
+  -l LIMIT_DAYS, --limit LIMIT_DAYS       Limit the results to commits less than N days old
 ``````````
 For example, to search for a specific word in github in combination with each word of the file keywordsfile.txt and output it to Slack  :
 
