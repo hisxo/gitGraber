@@ -14,6 +14,7 @@ def initTokensMap():
 #   tokensList.append(Token('JSON_WEB_TOKEN', '(eyJ[a-zA-Z0-9]{10,}\.eyJ[a-zA-Z0-9]{10,}\.[a-zA-Z0-9_-]{10,})'))
     tokensList.append(Token('MAILCHIMP', '\W(?:[a-f0-9]{32}(-us[0-9]{1,2}))\W'))
     tokensList.append(Token('MAILGUN', '(key-[0-9a-f]{32})'))
+    tokensList.append(Token('OPENAI', '(sk-[a-zA-Z0-9]{48})'))
     tokensList.append(Token('PAYPAL', '[\W]{1,2}([E][A-Z]{1}[a-zA-Z0-9_-]{78})[\W]{1,2}$'))
     tokensList.append(Token('PRIVATE_SSH_KEY', '(-----BEGIN PRIVATE KEY-----[a-zA-Z0-9\S]{100,}-----END PRIVATE KEY-----)'))
     tokensList.append(Token('PRIVATE_RSA_KEY', '(-----BEGIN RSA PRIVATE KEY-----[a-zA-Z0-9\S]{100,}-----END RSA PRIVATE KEY-----)'))
