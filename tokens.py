@@ -5,6 +5,7 @@ def initTokensMap():
     tokensList = []
     tokensCombo = []
     tokensList.append(Token('AMAZON_AWS', '([^A-Z0-9]|^)(AKIA|A3T|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{12,}',['EXAMPLE']))
+    tokensList.append(Token('AZURE_SERVICE_PRINCIPAL', '([0-9a-f]{40}-[0-9a-f]{12}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9a-f]{12})'))
     tokensList.append(Token('FACEBOOK', '\W([0-9a-f]{32})$'))
     tokensList.append(Token('FCM_SERVER_KEY', '(AAAA[a-zA-Z0-9_-]{7}:[a-zA-Z0-9_-]{140})'))
     tokensList.append(Token('GITHUB_CLIENT_SECRET', '[\W]{1,2}([a-f0-9]{40})[\W]{1,2}$'))
@@ -12,6 +13,7 @@ def initTokensMap():
     tokensList.append(Token('GOOGLE_OAUTH_ACCESS_TOKEN', '(ya29\\.[0-9A-Za-z\\-_]+)'))
     tokensList.append(Token('HEROKU', '(?:HEROKU_API_KEY|HEROKU_API_TOKEN|HEROKU_API_SECRET|heroku_api_key|heroku_api_token|heroku_api_secret|heroku_key|HEROKU_TOKEN|HEROKU_AUTH|heroku_auth|herokuAuth|heroku_auth_token)[\W|\s]{1,}([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12})\W'))
 #   tokensList.append(Token('JSON_WEB_TOKEN', '(eyJ[a-zA-Z0-9]{10,}\.eyJ[a-zA-Z0-9]{10,}\.[a-zA-Z0-9_-]{10,})'))
+    tokensList.append(Token('LINKEDIN_CLIENT_SECRET', '[\W]{1,2}([0-9a-f]{16})[\W]{1,2}$'))
     tokensList.append(Token('MAILCHIMP', '\W(?:[a-f0-9]{32}(-us[0-9]{1,2}))\W'))
     tokensList.append(Token('MAILGUN', '(key-[0-9a-f]{32})'))
     tokensList.append(Token('OPENAI', '(sk-[a-zA-Z0-9]{48})'))
@@ -35,7 +37,10 @@ def initTokensMap():
     tokensList.append(Token('TWILIO_API_KEY', 'SK[0-9a-fA-F]{32}'))
 
 ## Tokens which need two keys to be interesting ##
-
+    azureTenantID = Token('AZURE_TENANT_ID', '(tenant="?[0-9a-f]{36}"?)', None, 1)
+    azureClientID = Token('AZURE_CLIENT_ID', '(client_id="?[0-9a-f]{32}"?)', None, 2)
+    tokensCombo.append(TokenCombo('AZURE_CREDENTIALS', [azureTenantID, azureClientID]))
+    
     googleSecret = Token('GOOGLE_SECRET', r'(\'|\"|\=)(?=(.*[0-9].*))(?=(.*[A-Z].*))(?=([0-9A-Za-z-_]{24})(\1|\'|\"|(\s*(\r\n|\r|\n))))(?!.*\1.*\1.*)(?=(.*[a-z].*))(.*)(\1|\'|\"|(\s*(\r\n|\r|\n)))', None, 2)
     googleUrl = Token('GOOGLE_URL', '([0-9]{12}-[a-z0-9]{32}.apps.googleusercontent.com)', None, 1)
     tokensCombo.append(TokenCombo('GOOGLE', [googleSecret, googleUrl]))
