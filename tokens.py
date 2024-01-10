@@ -18,6 +18,7 @@ def initTokensMap():
     tokensList.append(Token('MAILGUN', '(key-[0-9a-f]{32})'))
     tokensList.append(Token('OPENAI', '(sk-[a-zA-Z0-9]{48})'))
     tokensList.append(Token('PAYPAL', '[\W]{1,2}([E][A-Z]{1}[a-zA-Z0-9_-]{78})[\W]{1,2}$'))
+    tokensList.append(Token('POSTMAN_TOKEN', '(PMAK-[0-9a-f-]{24}-[0-9a-f-]{34})'))
     tokensList.append(Token('PRIVATE_SSH_KEY', '(-----BEGIN PRIVATE KEY-----[a-zA-Z0-9\S]{100,}-----END PRIVATE KEY-----)'))
     tokensList.append(Token('PRIVATE_RSA_KEY', '(-----BEGIN RSA PRIVATE KEY-----[a-zA-Z0-9\S]{100,}-----END RSA PRIVATE KEY-----)'))
     tokensList.append(Token('PRIVATE_DSA_KEY', '(-----BEGIN DSA PRIVATE KEY-----[a-zA-Z0-9\S]{100,}-----END DSA PRIVATE KEY-----)'))
