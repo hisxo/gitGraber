@@ -116,35 +116,27 @@ def checkToken(content, tokensMap, tokensCombo):
 
     return tokensFound
 
+def notify(platform, message):
+    if platform == "discord":
+        if not config.DISCORD_WEBHOOKURL:
+            print('Please define Discord Webhook URL to enable notifications')
+            exit()
+        data = {'content': message}
+        headers = {"Content-Type": "application/json"}
+        requests.post(config.DISCORD_WEBHOOKURL, data=json.dumps(data), headers=headers)
 
-def notifyDiscord(message):
-    if not config.DISCORD_WEBHOOKURL:
-        print('Please define Discord Webhook URL to enable notifications')
-        exit()
-    data={}
-    data['content']=message
-    requests.post(config.DISCORD_WEBHOOKURL,data=json.dumps(data) , headers={"Content-Type": "application/json"})
+    elif platform == "slack":
+        if not config.SLACK_WEBHOOKURL:
+            print('Please define Slack Webhook URL to enable notifications')
+            exit()
+        requests.post(config.SLACK_WEBHOOKURL, json={'text': ':new:' + message})
 
-def notifySlack(message):
-    if not config.SLACK_WEBHOOKURL:
-        print('Please define Slack Webhook URL to enable notifications')
-        exit()
-    requests.post(config.SLACK_WEBHOOKURL, json={'text': ':new:'+message})
-
-def notifyTelegram(message):
-    if not config.TELEGRAM_CONFIG or not config.TELEGRAM_CONFIG.get("token") or not config.TELEGRAM_CONFIG.get("chat_id"):
-        print('Please define Telegram config to enable notifications')
-        exit()
-
-    telegramUrl = "https://api.telegram.org/bot{}/sendMessage".format(config.TELEGRAM_CONFIG.get("token"))
-    requests.post(telegramUrl, json={'text': message, 'chat_id': config.TELEGRAM_CONFIG.get("chat_id")})
-
-def writeToWordlist(content, wordlist):
-    f = open(wordlist, 'a+')
-    s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-    filename = content.split('/')[-1]
-    if s.find(bytes(filename,'utf-8')) == -1:
-        f.write(filename + '\n')
+    elif platform == "telegram":
+        if not config.TELEGRAM_CONFIG or not config.TELEGRAM_CONFIG.get("token") or not config.TELEGRAM_CONFIG.get("chat_id"):
+            print('Please define Telegram config to enable notifications')
+            exit()
+        telegramUrl = "https://api.telegram.org/bot{}/sendMessage".format(config.TELEGRAM_CONFIG.get("token"))
+        requests.post(telegramUrl, json={'text': message, 'chat_id': config.TELEGRAM_CONFIG.get("chat_id")})
 
 def displayResults(result, tokenResult, rawGitUrl, urlInfos):
     possibleTokenString = '[!] POSSIBLE '+tokenResult[result]+' TOKEN FOUND (keyword used:'+githubQuery+')'
@@ -328,11 +320,11 @@ def doSearchGithub(args,tokenMap, tokenCombos,keyword):
                 for token in tokensResult.keys():
                     displayMessage = displayResults(token, tokensResult, rawGitUrl, content[rawGitUrl])
                     if args.discord:
-                        notifyDiscord(displayMessage)
+                        notify("discord", displayMessage)
                     if args.slack:
-                        notifySlack(displayMessage)
+                        notify("slack", displayMessage)
                     if args.telegram:
-                        notifyTelegram(displayMessage)
+                        notify("telegram", displayMessage)
                     if args.wordlist:
                         writeToWordlist(rawGitUrl, args.wordlist)
 
